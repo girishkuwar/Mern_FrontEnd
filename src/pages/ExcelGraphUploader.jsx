@@ -1,108 +1,130 @@
-import React, { useState , useRef } from 'react';
+import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
-import { Bar } from 'react-chartjs-2';
 import {
-    Chart as ChartJS,
-    BarElement,
-    CategoryScale,
-    LinearScale,
-    Tooltip,
-    Legend
+  Bar,
+  Line,
+  Pie,
+  Doughnut,
+  Scatter,
+} from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Tooltip,
+  Legend
 } from 'chart.js';
-import jsPDF from 'jspdf';
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+// Register all required components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Tooltip,
+  Legend
+);
+
 
 const ExcelGraphUploader = () => {
-    const [chartData, setChartData] = useState(null);
-    const chartRef = useRef(null);
+  const [columns, setColumns] = useState([]);
+  const [dataRows, setDataRows] = useState([]);
+  const [xKey, setXKey] = useState('');
+  const [yKey, setYKey] = useState('');
+  const [chartType, setChartType] = useState('bar');
 
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
+  const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'scatter'];
 
-        reader.onload = (event) => {
-            const binaryStr = event.target.result;
-            const workbook = XLSX.read(binaryStr, { type: 'binary' });
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
 
-            // Read first sheet
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-
-            // Convert sheet to JSON
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-            // Assuming data is in format: [{ name: 'John', score: 80 }, { name: 'Jane', score: 95 }]
-            const labels = jsonData.map(row => row.name);
-            const scores = jsonData.map(row => row.score);
-
-            // Set chart data
-            setChartData({
-                labels,
-                datasets: [
-                    {
-                        label: 'Scores',
-                        data: scores,
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
-                    }
-                ]
-            });
-        };
-
-        reader.readAsBinaryString(file);
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      setDataRows(jsonData);
+      setColumns(Object.keys(jsonData[0]));
     };
 
-    const downloadJPG = () => {
-        const chart = chartRef.current;
-        const url = chart.toBase64Image();
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'chart.jpg';
-        link.click();
-      };
+    reader.readAsArrayBuffer(file);
+  };
 
-    const downloadPDF = () => {
-        const chart = chartRef.current;
-        const pdf = new jsPDF();
-        pdf.addImage(chart.toBase64Image(), 'JPEG', 10, 10, 180, 100);
-        pdf.save('chart.pdf');
+  const getChartData = () => {
+    const labels = dataRows.map(row => row[xKey]);
+    const values = dataRows.map(row => row[yKey]);
+
+    return {
+      labels: chartType === 'scatter' ? undefined : labels,
+      datasets: [{
+        label: `${yKey} vs ${xKey}`,
+        data: chartType === 'scatter'
+          ? dataRows.map(row => ({ x: row[xKey], y: row[yKey] }))
+          : values,
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        fill: false,
+      }]
     };
+  };
 
-    return (
-        <div className="p-4 max-w-md mx-auto">
-            <input
-                type="file"
-                accept=".xlsx, .xls"
-                onChange={handleFileUpload}
-                className="mb-4"
-            />
+  const renderChart = () => {
+    const data = getChartData();
+    const options = { responsive: true };
 
-            {chartData && (
-                <>
-                    <Bar
-                        data={chartData}
-                        ref={chartRef}
-                        options={{
-                            responsive: true,
-                            scales: {
-                                y: {
-                                    beginAtZero: true
-                                }
-                            }
-                        }}
-                    />
-                    <div className="mt-4 space-x-2">
-                        <button onClick={downloadJPG} className="bg-blue-500 text-white px-4 py-2 rounded">
-                            Download JPG
-                        </button>
-                        <button onClick={downloadPDF} className="bg-green-500 text-white px-4 py-2 rounded">
-                            Download PDF
-                        </button>
-                    </div>
-                </>
-            )}
-        </div>
-    );
+    switch (chartType) {
+      case 'bar': return <Bar data={data} options={options} />;
+      case 'line': return <Line data={data} options={options} />;
+      case 'pie': return <Pie data={data} options={options} />;
+      case 'doughnut': return <Doughnut data={data} options={options} />;
+      case 'scatter': return <Scatter data={data} options={options} />;
+      default: return <Bar data={data} options={options} />;
+    }
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>📊 Excel to Dynamic Chart</h2>
+
+      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+
+      {columns.length > 0 && (
+        <>
+          <div style={{ marginTop: 20 }}>
+            <label>X Axis: </label>
+            <select onChange={e => setXKey(e.target.value)}>
+              <option value="">Select</option>
+              {columns.map(col => <option key={col} value={col}>{col}</option>)}
+            </select>
+
+            <label style={{ marginLeft: 10 }}>Y Axis: </label>
+            <select onChange={e => setYKey(e.target.value)}>
+              <option value="">Select</option>
+              {columns.map(col => <option key={col} value={col}>{col}</option>)}
+            </select>
+
+            <label style={{ marginLeft: 10 }}>Chart Type: </label>
+            <select onChange={e => setChartType(e.target.value)} value={chartType}>
+              {chartTypes.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
+          </div>
+
+          {(xKey && yKey) && (
+            <div style={{ marginTop: 30 }}>
+              {renderChart()}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 };
 
 export default ExcelGraphUploader;

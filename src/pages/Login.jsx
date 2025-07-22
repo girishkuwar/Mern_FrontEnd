@@ -10,6 +10,7 @@ function Login() {
   const handleLogin = async () => {
     const res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
     localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user)); // user has role info
     res.data.user.role === "admin" ? nav("/admin") : nav("/dashboard");
   };
 
@@ -19,7 +20,7 @@ function Login() {
       <input placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
       <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
       <button onClick={handleLogin}>Login</button>
-      <button onClick={() => { nav("/register")}}>New Member Register</button>
+      <button onClick={() => { nav("/register") }}>New Member Register</button>
     </div>
   );
 }

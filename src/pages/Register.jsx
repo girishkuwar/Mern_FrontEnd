@@ -64,6 +64,7 @@ function Register() {
         </select><br /><br />
 
         <button type="submit">Register</button>
+        <button onClick={() => {navigate("/login")}}>Login</button>
         {error && <p style={{ color: "red" }}>{error}</p>}
       </form>
     </div>

@@ -12,6 +12,7 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
+          <Route index element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

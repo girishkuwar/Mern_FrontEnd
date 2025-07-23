@@ -57,16 +57,16 @@ const ExcelGraphUploader = () => {
     const formData = new FormData();
     formData.append('excel', file);
 
-    try {
-      await axios.post('http://localhost:5000/api/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // if using auth
-        }
-      });
-    } catch (error) {
-      console.error('Upload failed:', err);
-    }
+    // try {
+    //   await axios.post('http://localhost:5000/api/upload', formData, {
+    //     headers: {
+    //       'Content-Type': 'multipart/form-data',
+    //       'Authorization': `Bearer ${localStorage.getItem('token')}` // if using auth
+    //     }
+    //   });
+    // } catch (error) {
+    //   console.error('Upload failed:', err);
+    // }
 
 
 

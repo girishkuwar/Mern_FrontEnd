@@ -28,46 +28,76 @@ function Register() {
     }
   };
 
-  return (
-    <div style={{ padding: "2rem" }}>
-      <h2>Register</h2>
-      <form onSubmit={handleRegister}>
-        <input
-          name="username"
-          placeholder="Username"
-          value={form.username}
-          onChange={handleChange}
-          required
-        /><br /><br />
+  return (<>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Register</h2>
+        <form onSubmit={handleRegister} className="space-y-5">
+          <div>
+            <label className="block mb-1 font-medium text-gray-600">Name</label>
+            <input
+              type="text"
+              name="username"
+              required
+              placeholder="Username"
+              value={form.username}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-        <input
-          name="email"
-          placeholder="Email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        /><br /><br />
+          <div>
+            <label className="block mb-1 font-medium text-gray-600">Email</label>
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-        <input
-          name="password"
-          placeholder="Password"
-          type="password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        /><br /><br />
+          <div>
+            <label className="block mb-1 font-medium text-gray-600">Password</label>
+            <input
+              type="password"
+              name="password"
+              required
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-        <select name="role" value={form.role} onChange={handleChange}>
-          <option value="user">User</option>
-          <option value="admin">Admin</option> {/* only use if needed */}
-        </select><br /><br />
+          <div>
+            <label className="block mb-1 font-medium text-gray-600">Role</label>
+            <select
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
 
-        <button type="submit">Register</button>
-        <button onClick={() => {navigate("/login")}}>Login</button>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </form>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition duration-300"
+          >
+            Register
+          </button>
+        </form>
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Already have an account? <a href="/login" onClick={() => { navigate("/login") }} className="text-blue-500 hover:underline">Login</a>
+        </p>
+      </div>
     </div>
+  </>
   );
 }
 

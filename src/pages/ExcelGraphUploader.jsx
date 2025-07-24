@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
   Bar,
   Line,
@@ -20,7 +22,6 @@ import {
   Legend
 } from 'chart.js';
 
-// Register all required components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -31,7 +32,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
 
 const ExcelGraphUploader = () => {
   const [columns, setColumns] = useState([]);
@@ -46,36 +46,38 @@ const ExcelGraphUploader = () => {
     const file = e.target.files[0];
     const reader = new FileReader();
 
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       const data = new Uint8Array(evt.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(sheet);
+      if (!jsonData.length) return alert("Excel file is empty!");
+
       setDataRows(jsonData);
       setColumns(Object.keys(jsonData[0]));
+
+      const formData = new FormData();
+      formData.append('excel', file);
+
+      // Optional: Upload to server
+      // try {
+      //   await axios.post('http://localhost:5000/api/upload', formData, {
+      //     headers: {
+      //       'Content-Type': 'multipart/form-data',
+      //       'Authorization': `Bearer ${localStorage.getItem('token')}`
+      //     }
+      //   });
+      // } catch (err) {
+      //   console.error('Upload failed:', err);
+      // }
     };
-    const formData = new FormData();
-    formData.append('excel', file);
-
-    // try {
-    //   await axios.post('http://localhost:5000/api/upload', formData, {
-    //     headers: {
-    //       'Content-Type': 'multipart/form-data',
-    //       'Authorization': `Bearer ${localStorage.getItem('token')}` // if using auth
-    //     }
-    //   });
-    // } catch (error) {
-    //   console.error('Upload failed:', err);
-    // }
-
-
 
     reader.readAsArrayBuffer(file);
   };
 
   const getChartData = () => {
     const labels = dataRows.map(row => row[xKey]);
-    const values = dataRows.map(row => row[yKey]);
+    const values = dataRows.map(row => Number(row[yKey]));
 
     return {
       labels: chartType === 'scatter' ? undefined : labels,
@@ -110,49 +112,98 @@ const ExcelGraphUploader = () => {
     const image = chartCanvas.toDataURL('image/png');
     const link = document.createElement('a');
     link.href = image;
-    link.download = 'chart.png';
+    link.download = `chart-${chartType}-${Date.now()}.png`;
     link.click();
   };
 
+  const downloadPDF = () => {
+    const chartCanvas = document.querySelector('canvas');
+    html2canvas(chartCanvas).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF();
+      pdf.addImage(imgData, 'PNG', 10, 10, 180, 100);
+      pdf.save('chart.pdf');
+    });
+  };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>📊 Excel to Dynamic Chart</h2>
+    <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
+      <div className="max-w-4xl w-full bg-white shadow-lg rounded-xl p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+          📊 Excel to Dynamic Chart
+        </h2>
 
-      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+        <div className="mb-4">
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={handleFileUpload}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+              file:rounded-lg file:border-0 file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+        </div>
 
-      {columns.length > 0 && (
-        <>
-          <div style={{ marginTop: 20 }}>
-            <label>X Axis: </label>
-            <select onChange={e => setXKey(e.target.value)}>
-              <option value="">Select</option>
-              {columns.map(col => <option key={col} value={col}>{col}</option>)}
-            </select>
-
-            <label style={{ marginLeft: 10 }}>Y Axis: </label>
-            <select onChange={e => setYKey(e.target.value)}>
-              <option value="">Select</option>
-              {columns.map(col => <option key={col} value={col}>{col}</option>)}
-            </select>
-
-            <label style={{ marginLeft: 10 }}>Chart Type: </label>
-            <select onChange={e => setChartType(e.target.value)} value={chartType}>
-              {chartTypes.map(type => <option key={type} value={type}>{type}</option>)}
-            </select>
-          </div>
-
-          {(xKey && yKey) && (
-            <div style={{ marginTop: 30 }}>
-              {renderChart()}
+        {columns.length > 0 && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">X Axis</label>
+                <select
+                  onChange={e => setXKey(e.target.value)}
+                  className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
+                >
+                  <option value="">Select</option>
+                  {columns.map(col => <option key={col} value={col}>{col}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Y Axis</label>
+                <select
+                  onChange={e => setYKey(e.target.value)}
+                  className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
+                >
+                  <option value="">Select</option>
+                  {columns.map(col => <option key={col} value={col}>{col}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Chart Type</label>
+                <select
+                  onChange={e => setChartType(e.target.value)}
+                  value={chartType}
+                  className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
+                >
+                  {chartTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                </select>
+              </div>
             </div>
-          )}
-          <button onClick={downloadChart} style={{ marginTop: 10 }}>
-            📥 Download Chart as PNG
-          </button>
 
-        </>
-      )}
+            {(xKey && yKey) && (
+              <div className="mt-6">
+                <div className="bg-white p-4 rounded-lg shadow">
+                  {renderChart()}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={downloadChart}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                📥 Download Chart as PNG
+              </button>
+              <button
+                onClick={downloadPDF}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                📥 Download Chart as PDF
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

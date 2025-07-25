@@ -56,10 +56,10 @@ const ExcelGraphUploader = () => {
       setDataRows(jsonData);
       setColumns(Object.keys(jsonData[0]));
 
-      const formData = new FormData();
-      formData.append('excel', file);
-
       // Optional: Upload to server
+      // 
+      // const formData = new FormData();
+      // formData.append('excel', file);
       // try {
       //   await axios.post('http://localhost:5000/api/upload', formData, {
       //     headers: {
@@ -70,6 +70,33 @@ const ExcelGraphUploader = () => {
       // } catch (err) {
       //   console.error('Upload failed:', err);
       // }
+
+      try {
+
+        await axios.post("http://localhost:5000/api/excel/save", {
+          data: jsonData
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        console.log("Data sent successfully");
+      } catch (err) {
+        console.error("error sending data to server");
+      }
+
+
+
+
+
+
+
+
+
+
+
     };
 
     reader.readAsArrayBuffer(file);

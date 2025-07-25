@@ -8,6 +8,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
+    totalUploads: 0
   });
 
   const [loading, setLoading] = useState(true);
@@ -71,7 +72,7 @@ const AdminDashboard = () => {
               {/* Total Uploads */}
               <div className="bg-white shadow-md rounded-2xl p-6 hover:shadow-lg transition">
                 <h2 className="text-lg font-semibold text-gray-600 mb-2">Total Uploads</h2>
-                <p className="text-3xl font-bold text-green-600">430</p>
+                <p className="text-3xl font-bold text-green-600">{stats.totalUploads}</p>
               </div>
 
               {/* Active Users */}

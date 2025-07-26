@@ -1,6 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import logo from '../assets/logo.png'
+
 
 function Register() {
   const [form, setForm] = useState({
@@ -31,6 +33,7 @@ function Register() {
   return (<>
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+      <img src={logo} className="w-20 md:w-32 lg:w-40 mx-auto mb-4" alt="" />
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Register</h2>
         <form onSubmit={handleRegister} className="space-y-5">
           <div>

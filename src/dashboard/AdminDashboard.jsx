@@ -43,10 +43,10 @@ const AdminDashboard = () => {
     <div className="flex h-screen">
       {/* Sidebar */}
       <aside className="w-64 bg-gray-800 text-white p-5">
-        <div className="text-2xl font-semibold text-white-500">Welcome to the Admin Dashboard</div>
+        <div className="text-2xl font-semibold text-white-500 mb-5">Welcome to the Admin Dashboard</div>
         <nav>
           <ul className="space-y-8">
-            <li><Link to="" className="hover:text-yellow-400">Dashboard</Link></li>
+            <li><Link to="/admin" className="hover:text-yellow-400">Dashboard</Link></li>
             <li><Link to="/admin/users" className="hover:text-yellow-400">Users</Link></li>
             <li><Link to="/admin/uploads" className="hover:text-yellow-400">Uploads</Link></li>
             <li><Link to="/admin/settings" className="hover:text-yellow-400">Settings</Link></li>

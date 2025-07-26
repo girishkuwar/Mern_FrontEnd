@@ -74,7 +74,8 @@ const ExcelGraphUploader = () => {
       try {
 
         await axios.post("http://localhost:5000/api/excel/save", {
-          data: jsonData
+          data: jsonData,
+          name:file.name
         }, {
           headers: {
             'Content-Type': 'application/json',

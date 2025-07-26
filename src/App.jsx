@@ -18,6 +18,7 @@ function App() {
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/admin/*" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/exel" element={<ProtectedRoute><ExcelGraphUploader /></ProtectedRoute>} />
+          <Route path="/exel/:id" element={<ProtectedRoute><ExcelGraphUploader /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </>

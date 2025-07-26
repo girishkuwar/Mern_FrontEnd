@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useParams } from 'react-router-dom'
 import {
   Bar,
   Line,
@@ -39,8 +40,8 @@ const ExcelGraphUploader = () => {
   const [xKey, setXKey] = useState('');
   const [yKey, setYKey] = useState('');
   const [chartType, setChartType] = useState('bar');
-
   const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'scatter'];
+  const { id } = useParams();
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -75,7 +76,7 @@ const ExcelGraphUploader = () => {
 
         await axios.post("http://localhost:5000/api/excel/save", {
           data: jsonData,
-          name:file.name
+          name: file.name
         }, {
           headers: {
             'Content-Type': 'application/json',
@@ -87,19 +88,7 @@ const ExcelGraphUploader = () => {
       } catch (err) {
         console.error("error sending data to server");
       }
-
-
-
-
-
-
-
-
-
-
-
     };
-
     reader.readAsArrayBuffer(file);
   };
 
@@ -154,6 +143,29 @@ const ExcelGraphUploader = () => {
     });
   };
 
+  useEffect(() => {
+    const fetchUpload = async () => {
+      if (!id) return;
+      try {
+        const res = await axios.get(`http://localhost:5000/api/excel/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        const jsonData = res.data.data;
+        setDataRows(jsonData);
+        setColumns(Object.keys(jsonData[0]));
+        setXKey('');
+        setYKey('');
+      } catch (err) {
+        console.error("Failed to fetch upload by ID", err);
+      }
+    }
+    fetchUpload();
+  }, [])
+
+
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
       <div className="max-w-4xl w-full bg-white shadow-lg rounded-xl p-6">
@@ -161,16 +173,18 @@ const ExcelGraphUploader = () => {
           📊 Excel to Dynamic Chart
         </h2>
 
-        <div className="mb-4">
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleFileUpload}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-              file:rounded-lg file:border-0 file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-        </div>
+        {!id && (
+          <div className="mb-4">
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileUpload}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+            file:rounded-lg file:border-0 file:text-sm file:font-semibold
+            file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+        )}
 
         {columns.length > 0 && (
           <>
@@ -215,16 +229,16 @@ const ExcelGraphUploader = () => {
               </div>
             )}
 
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-7">
               <button
                 onClick={downloadChart}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-2 mx-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
                 📥 Download Chart as PNG
               </button>
               <button
                 onClick={downloadPDF}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="px-4 py-2 mx-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
                 📥 Download Chart as PDF
               </button>

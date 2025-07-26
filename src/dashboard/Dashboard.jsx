@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Loader from '../components/Loader';
 
 
 
@@ -25,6 +26,10 @@ const Dashboard = () => {
     }
   };
 
+  const handleItemclick = (Itemid) => {
+    nav(`/exel/${Itemid}`);
+  }
+
   useEffect(() => {
     fetchUserUploads();
   }, []);
@@ -41,7 +46,7 @@ const Dashboard = () => {
         <h2 className="text-xl font-semibold text-gray-800 mb-3">Upload History</h2>
         {
           loading ? (
-            <p>Loading uploads....</p>
+            <Loader/>
           ) : uploadHistory.length === 0 ? (
             <p>No uploads found</p>
           ) : (
@@ -58,7 +63,7 @@ const Dashboard = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {uploadHistory.map((item, index) => (
-                  <tr key={item._id} className="text-center">
+                  <tr  onClick={() => handleItemclick(item._id)} key={item._id} className="text-center">
                     <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
                     <td className="px-4 py-2 text-sm text-blue-600 font-medium">{item.fileName}</td>
                     <td className="px-4 py-2 text-sm text-gray-700">{new Date(item.uploadedAt).toLocaleDateString()}</td>

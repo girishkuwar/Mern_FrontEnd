@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Excel Chart Viewer with Table Preview</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: Arial; margin: 20px; background: #f5f5f5; }
+    #controls { margin-bottom: 15px; }
+    #chart2d, #chart3d { width: 100%; height: 600px; }
+    #chart3d { display: none; }
+    select, input[type="file"] {
+      padding: 6px 10px;
+      font-size: 14px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+      width: 100%;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    th {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Excel Upload → Chart → Table Preview</h2>
+
+  <div id="controls">
+    <input type="file" id="fileInput" accept=".xlsx" />
+    <label>Chart Type:</label>
+    <select id="chartType">
+      <option value="bar">2D Bar</option>
+      <option value="line">2D Line</option>
+      <option value="scatter">2D Scatter</option>
+      <option value="scatter3d">3D Scatter</option>
+      <option value="line3d">3D Line</option>
+      <option value="mesh3d">3D Surface</option>
+    </select>
+    <br>
+    <label>X:</label>
+    <select id="xCol"></select>
+    <label>Y:</label>
+    <select id="yCol"></select>
+    <label>Z:</label>
+    <select id="zCol"></select>
+  </div>
+
+  <canvas id="chart2d"></canvas>
+  <div id="chart3d"></div>
+
+  <div id="tablePreview"></div>
+
+  <script>
+    let sheetData = [];
+    let chart2d = null;
+
+    const fileInput = document.getElementById('fileInput');
+    const xColSelect = document.getElementById('xCol');
+    const yColSelect = document.getElementById('yCol');
+    const zColSelect = document.getElementById('zCol');
+    const chartTypeSelect = document.getElementById('chartType');
+
+    fileInput.addEventListener('change', handleFile);
+    chartTypeSelect.addEventListener('change', renderChart);
+    xColSelect.addEventListener('change', renderChart);
+    yColSelect.addEventListener('change', renderChart);
+    zColSelect.addEventListener('change', renderChart);
+
+    function handleFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        if (sheetData.length < 2) return alert("Not enough data");
+
+        populateDropdowns(sheetData[0]);
+        renderChart();
+        renderTablePreview();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function populateDropdowns(headers) {
+      [xColSelect, yColSelect, zColSelect].forEach(select => {
+        select.innerHTML = headers.map(h => `<option value="${h}">${h}</option>`).join('');
+      });
+    }
+
+    function getColumnData(headerName) {
+      const colIndex = sheetData[0].indexOf(headerName);
+      return sheetData.slice(1).map(row => Number(row[colIndex])).filter(v => !isNaN(v));
+    }
+
+    function renderChart() {
+      if (!sheetData.length) return;
+
+      const x = getColumnData(xColSelect.value);
+      const y = getColumnData(yColSelect.value);
+      const z = getColumnData(zColSelect.value);
+
+      const chartType = chartTypeSelect.value;
+      const chart2dCanvas = document.getElementById('chart2d');
+      const chart3dDiv = document.getElementById('chart3d');
+
+      chart2dCanvas.style.display = 'none';
+      chart3dDiv.style.display = 'none';
+
+      if (['bar', 'line', 'scatter'].includes(chartType)) {
+        chart2dCanvas.style.display = 'block';
+        if (chart2d) chart2d.destroy();
+
+        const isScatter = chartType === 'scatter';
+        chart2d = new Chart(chart2dCanvas, {
+          type: isScatter ? 'scatter' : chartType,
+          data: {
+            labels: x,
+            datasets: [{
+              label: 'Excel Data',
+              data: isScatter ? x.map((xi, i) => ({ x: xi, y: y[i] })) : y,
+              backgroundColor: 'orange',
+              borderColor: 'black',
+              borderWidth: 1,
+              showLine: !isScatter
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: { title: { display: true, text: 'X Axis' }},
+              y: { title: { display: true, text: 'Y Axis' }}
+            }
+          }
+        });
+
+      } else {
+        chart3dDiv.style.display = 'block';
+
+        let trace;
+        let layout = {
+          title: `${chartType.toUpperCase()}`,
+          margin: { l: 0, r: 0, b: 0, t: 50 },
+          scene: {
+            xaxis: { title: xColSelect.value },
+            yaxis: { title: yColSelect.value },
+            zaxis: { title: zColSelect.value }
+          }
+        };
+
+        if (chartType === 'scatter3d') {
+          trace = {
+            x, y, z,
+            mode: 'markers',
+            type: 'scatter3d',
+            marker: { size: 8, color: z, colorscale: 'Viridis', opacity: 0.8 }
+          };
+        } else if (chartType === 'line3d') {
+          trace = {
+            x, y, z,
+            mode: 'lines+markers',
+            type: 'scatter3d',
+            line: { color: 'blue', width: 4 },
+            marker: { size: 6 }
+          };
+        } else if (chartType === 'mesh3d') {
+          trace = {
+            x, y, z,
+            type: 'mesh3d',
+            color: 'lightblue',
+            opacity: 0.5
+          };
+        }
+
+        Plotly.newPlot('chart3d', [trace], layout);
+      }
+    }
+
+    function renderTablePreview() {
+      const preview = document.getElementById('tablePreview');
+      if (!sheetData.length) return;
+
+      let html = '<table><thead><tr>';
+      sheetData[0].forEach(header => {
+        html += `<th>${header}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      sheetData.slice(1).forEach(row => {
+        html += '<tr>';
+        sheetData[0].forEach((_, i) => {
+          html += `<td>${row[i] !== undefined ? row[i] : ''}</td>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      preview.innerHTML = html;
+    }
+  </script>
+
+</body>
+</html>

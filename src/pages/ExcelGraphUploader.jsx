@@ -42,7 +42,7 @@ const ExcelGraphUploader = () => {
   const [xKey, setXKey] = useState('');
   const [yKey, setYKey] = useState('');
   const [chartType, setChartType] = useState('bar');
-  const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'scatter' , 'bar3d' , 'scatter3d'];
+  const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'scatter', 'bar3d', 'scatter3d'];
   const { id } = useParams();
 
   const handleFileUpload = async (e) => {
@@ -115,7 +115,7 @@ const ExcelGraphUploader = () => {
   const get3DChartOption = () => {
     const labels = dataRows.map(row => row[xKey]);
     const values = dataRows.map(row => Number(row[yKey]));
-  
+
     if (chartType === 'bar3d') {
       return {
         tooltip: {},
@@ -149,7 +149,7 @@ const ExcelGraphUploader = () => {
         }]
       };
     }
-  
+
     if (chartType === 'scatter3d') {
       return {
         tooltip: {},
@@ -168,10 +168,10 @@ const ExcelGraphUploader = () => {
         }]
       };
     }
-  
+
     return {};
   };
-  
+
 
   const renderChart = () => {
     const data = getChartData();
@@ -243,7 +243,7 @@ const ExcelGraphUploader = () => {
     }} className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
       <div className="max-w-6xl w-full bg-white shadow-lg rounded-xl p-6 mt-9">
         <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-        Excel to Dynamic Chart
+          Excel to Dynamic Chart
         </h2>
 
         {!id && (
@@ -294,6 +294,7 @@ const ExcelGraphUploader = () => {
               </div>
             </div>
 
+
             {(xKey && yKey) && (
               <div className="mt-6">
                 <div className="bg-white p-4 rounded-lg shadow">
@@ -301,6 +302,31 @@ const ExcelGraphUploader = () => {
                 </div>
               </div>
             )}
+
+            {dataRows.length > 0 && (
+              <div className="mt-4 overflow-auto max-h-96 border rounded-md">
+                <table className="min-w-full divide-y divide-gray-200 text-sm text-left">
+                  <thead className="bg-gray-100 sticky top-0">
+                    <tr>
+                      {columns.map(col => (
+                        <th key={col} className="px-4 py-2 font-semibold text-gray-700">{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {dataRows.slice(0, 20).map((row, i) => (
+                      <tr key={i}>
+                        {columns.map(col => (
+                          <td key={col} className="px-4 py-2 text-gray-800">{row[col]}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-xs text-gray-500 mt-2 px-2">Showing first 20 rows.</p>
+              </div>
+            )}
+
 
             <div className="flex justify-center mt-7">
               <button

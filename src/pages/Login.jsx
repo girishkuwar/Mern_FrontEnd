@@ -19,7 +19,12 @@ function Login() {
 
   return (
     <div>
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div style={{
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundImage: `url('/bg.png')`
+    }} className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
           <img src={logo} className="w-20 md:w-32 lg:w-40 mx-auto mb-4" alt="" />
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Login</h2>

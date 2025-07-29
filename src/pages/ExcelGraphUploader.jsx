@@ -4,6 +4,8 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useParams } from 'react-router-dom'
+import ReactECharts from 'echarts-for-react'
+import wave from '../assets/wave.svg'
 import {
   Bar,
   Line,
@@ -40,7 +42,7 @@ const ExcelGraphUploader = () => {
   const [xKey, setXKey] = useState('');
   const [yKey, setYKey] = useState('');
   const [chartType, setChartType] = useState('bar');
-  const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'scatter'];
+  const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'scatter' , 'bar3d' , 'scatter3d'];
   const { id } = useParams();
 
   const handleFileUpload = async (e) => {
@@ -110,9 +112,74 @@ const ExcelGraphUploader = () => {
     };
   };
 
+  const get3DChartOption = () => {
+    const labels = dataRows.map(row => row[xKey]);
+    const values = dataRows.map(row => Number(row[yKey]));
+  
+    if (chartType === 'bar3d') {
+      return {
+        tooltip: {},
+        xAxis3D: {
+          type: 'category',
+          data: labels,
+        },
+        yAxis3D: {
+          type: 'category',
+          data: ['Value'],
+        },
+        zAxis3D: {
+          type: 'value',
+        },
+        grid3D: {
+          boxWidth: 100,
+          boxDepth: 20,
+          viewControl: { alpha: 25, beta: 40 },
+          light: { main: { intensity: 1.2 } },
+        },
+        series: [{
+          type: 'bar3D',
+          data: labels.map((label, idx) => [label, 'Value', values[idx]]),
+          shading: 'lambert',
+          label: {
+            show: false,
+          },
+          itemStyle: {
+            color: '#3b82f6'
+          }
+        }]
+      };
+    }
+  
+    if (chartType === 'scatter3d') {
+      return {
+        tooltip: {},
+        xAxis3D: { type: 'value' },
+        yAxis3D: { type: 'value' },
+        zAxis3D: { type: 'value' },
+        grid3D: {
+          viewControl: { alpha: 20, beta: 40 },
+          light: { main: { intensity: 1.5 } },
+        },
+        series: [{
+          type: 'scatter3D',
+          symbolSize: 10,
+          data: dataRows.map(row => [row[xKey], row[yKey], Math.random() * 100]),
+          itemStyle: { color: '#06b6d4' }
+        }]
+      };
+    }
+  
+    return {};
+  };
+  
+
   const renderChart = () => {
     const data = getChartData();
     const options = { responsive: true };
+
+    if (chartType === 'bar3d' || chartType === 'scatter3d') {
+      return <ReactECharts option={get3DChartOption()} style={{ height: 400 }} />;
+    }
 
     switch (chartType) {
       case 'bar': return <Bar data={data} options={options} />;
@@ -144,6 +211,7 @@ const ExcelGraphUploader = () => {
   };
 
   useEffect(() => {
+    console.log(wave);
     const fetchUpload = async () => {
       if (!id) return;
       try {
@@ -167,10 +235,15 @@ const ExcelGraphUploader = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
-      <div className="max-w-4xl w-full bg-white shadow-lg rounded-xl p-6">
+    <div style={{
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundImage: `url('/wave.svg')`
+    }} className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
+      <div className="max-w-6xl w-full bg-white shadow-lg rounded-xl p-6 mt-9">
         <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-          📊 Excel to Dynamic Chart
+        Excel to Dynamic Chart
         </h2>
 
         {!id && (
@@ -234,13 +307,13 @@ const ExcelGraphUploader = () => {
                 onClick={downloadChart}
                 className="px-4 py-2 mx-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
-                📥 Download Chart as PNG
+                Download Chart as PNG
               </button>
               <button
                 onClick={downloadPDF}
                 className="px-4 py-2 mx-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
-                📥 Download Chart as PDF
+                Download Chart as PDF
               </button>
             </div>
           </>

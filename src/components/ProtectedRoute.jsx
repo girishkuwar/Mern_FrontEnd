@@ -8,7 +8,8 @@ function ProtectedRoute({ children, role }) {
 
   // If role is passed and doesn't match, redirect
   if (role && user?.role !== role) {
-    return <Navigate to="/unauthorized" replace />;
+    console.log("You Have To Login First")
+    return  <Navigate to="/unauthorized" replace />;
   }
 
   return children;

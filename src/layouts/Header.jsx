@@ -1,10 +1,27 @@
 import React, { use } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios';
 
 const Header = () => {
   const nav = useNavigate();
 
   const user = JSON.parse(localStorage.getItem('user'));
+
+  const logout = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/auth/logout", {
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        localStorage.clear(); 
+        nav("/")
+    } catch (error) {
+      console.log(error);
+    }
+  }
   return (
     <div><nav class="bg-white shadow-md sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,7 +51,7 @@ const Header = () => {
 
                   <div className="absolute right-0 top-full pt-2 w-32 hidden group-hover:flex flex-col bg-white border border-gray-200 shadow-lg rounded-md z-50">
                     <button
-                      onClick={() => {localStorage.clear(); nav("/")}}
+                      onClick={logout}
                       className="text-left px-4 py-2 text-red-600 hover:bg-gray-100 rounded-md"
                     >
                       Logout

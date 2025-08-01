@@ -15,9 +15,22 @@ const AdminDashboard = () => {
 
 
 
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/auth/logout", {
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        localStorage.clear(); 
+        localStorage.clear();
+        window.location.href = "/login";
+    } catch (error) {
+      console.log(error);
+    }
+   
   };
 
   useEffect(() => {

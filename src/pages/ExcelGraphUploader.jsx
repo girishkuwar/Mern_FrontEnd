@@ -3,9 +3,10 @@ import * as XLSX from 'xlsx';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useParams } from 'react-router-dom'
-import ReactECharts from 'echarts-for-react'
-import wave from '../assets/wave.svg'
+import { useParams } from 'react-router-dom';
+import Plot from 'react-plotly.js';
+
+
 import {
   Bar,
   Line,
@@ -41,8 +42,9 @@ const ExcelGraphUploader = () => {
   const [dataRows, setDataRows] = useState([]);
   const [xKey, setXKey] = useState('');
   const [yKey, setYKey] = useState('');
+  const [zKey, setZKey] = useState('');
   const [chartType, setChartType] = useState('bar');
-  const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'scatter', 'bar3d', 'scatter3d'];
+  const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'scatter', 'bar3d', 'scatter3d', 'line3d', 'surface3d', 'mesh3d', 'bubble3d'];
   const { id } = useParams();
 
   const handleFileUpload = async (e) => {
@@ -58,24 +60,11 @@ const ExcelGraphUploader = () => {
 
       setDataRows(jsonData);
       setColumns(Object.keys(jsonData[0]));
-
-      // Optional: Upload to server
-      // 
-      // const formData = new FormData();
-      // formData.append('excel', file);
-      // try {
-      //   await axios.post('http://localhost:5000/api/upload', formData, {
-      //     headers: {
-      //       'Content-Type': 'multipart/form-data',
-      //       'Authorization': `Bearer ${localStorage.getItem('token')}`
-      //     }
-      //   });
-      // } catch (err) {
-      //   console.error('Upload failed:', err);
-      // }
+      setXKey('');
+      setYKey('');
+      setZKey('');
 
       try {
-
         await axios.post("http://localhost:5000/api/excel/save", {
           data: jsonData,
           name: file.name
@@ -112,74 +101,165 @@ const ExcelGraphUploader = () => {
     };
   };
 
-  const get3DChartOption = () => {
-    const labels = dataRows.map(row => row[xKey]);
-    const values = dataRows.map(row => Number(row[yKey]));
-
-    if (chartType === 'bar3d') {
-      return {
-        tooltip: {},
-        xAxis3D: {
-          type: 'category',
-          data: labels,
-        },
-        yAxis3D: {
-          type: 'category',
-          data: ['Value'],
-        },
-        zAxis3D: {
-          type: 'value',
-        },
-        grid3D: {
-          boxWidth: 100,
-          boxDepth: 20,
-          viewControl: { alpha: 25, beta: 40 },
-          light: { main: { intensity: 1.2 } },
-        },
-        series: [{
-          type: 'bar3D',
-          data: labels.map((label, idx) => [label, 'Value', values[idx]]),
-          shading: 'lambert',
-          label: {
-            show: false,
-          },
-          itemStyle: {
-            color: '#3b82f6'
-          }
-        }]
-      };
-    }
-
-    if (chartType === 'scatter3d') {
-      return {
-        tooltip: {},
-        xAxis3D: { type: 'value' },
-        yAxis3D: { type: 'value' },
-        zAxis3D: { type: 'value' },
-        grid3D: {
-          viewControl: { alpha: 20, beta: 40 },
-          light: { main: { intensity: 1.5 } },
-        },
-        series: [{
-          type: 'scatter3D',
-          symbolSize: 10,
-          data: dataRows.map(row => [row[xKey], row[yKey], Math.random() * 100]),
-          itemStyle: { color: '#06b6d4' }
-        }]
-      };
-    }
-
-    return {};
-  };
-
-
   const renderChart = () => {
     const data = getChartData();
     const options = { responsive: true };
 
-    if (chartType === 'bar3d' || chartType === 'scatter3d') {
-      return <ReactECharts option={get3DChartOption()} style={{ height: 400 }} />;
+    if (chartType === 'bar3d' && xKey && yKey && zKey) {
+      return (
+        <Plot
+          data={[{
+            type: 'bar3d', // not a valid type, so instead use scatter3d with bars
+            type: 'scatter3d',
+            mode: 'markers',
+            x: dataRows.map(row => row[xKey]),
+            y: dataRows.map(row => row[yKey]),
+            z: dataRows.map(row => row[zKey]),
+            marker: {
+              size: 6,
+              color: dataRows.map(row => row[zKey]),
+              colorscale: 'Viridis',
+              opacity: 0.8
+            }
+          }]}
+          layout={{
+            title: '3D Bar Chart',
+            autosize: true,
+            scene: {
+              xaxis: { title: xKey },
+              yaxis: { title: yKey },
+              zaxis: { title: zKey }
+            }
+          }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      );
     }
+  
+    if (chartType === 'scatter3d' && xKey && yKey && zKey) {
+      return (
+        <Plot
+          data={[{
+            type: 'scatter3d',
+            mode: 'markers',
+            x: dataRows.map(row => row[xKey]),
+            y: dataRows.map(row => row[yKey]),
+            z: dataRows.map(row => row[zKey]),
+            marker: {
+              size: 6,
+              color: dataRows.map(row => row[zKey]),
+              colorscale: 'Viridis',
+              opacity: 0.8
+            }
+          }]}
+          layout={{
+            title: '3D Scatter Chart',
+            autosize: true,
+            scene: {
+              xaxis: { title: xKey },
+              yaxis: { title: yKey },
+              zaxis: { title: zKey }
+            }
+          }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      );
+    }
+    
+    if (chartType === 'line3d' && xKey && yKey && zKey) {
+      return (
+        <Plot
+          data={[{
+            type: 'scatter3d',
+            mode: 'lines',
+            x: dataRows.map(row => row[xKey]),
+            y: dataRows.map(row => row[yKey]),
+            z: dataRows.map(row => row[zKey]),
+            line: { width: 4, color: '#636efa' }
+          }]}
+          layout={{
+            title: '3D Line Chart',
+            scene: { xaxis: { title: xKey }, yaxis: { title: yKey }, zaxis: { title: zKey } },
+          }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      );
+    }
+
+    if (chartType === 'surface3d' && xKey && yKey && zKey) {
+      const xSet = [...new Set(dataRows.map(row => row[xKey]))];
+      const ySet = [...new Set(dataRows.map(row => row[yKey]))];
+      const zMatrix = ySet.map(yVal =>
+        xSet.map(xVal => {
+          const match = dataRows.find(row => row[xKey] === xVal && row[yKey] === yVal);
+          return match ? Number(match[zKey]) : null;
+        })
+      );
+    
+      return (
+        <Plot
+          data={[{
+            type: 'surface',
+            x: xSet,
+            y: ySet,
+            z: zMatrix
+          }]}
+          layout={{
+            title: '3D Surface Plot',
+            scene: { xaxis: { title: xKey }, yaxis: { title: yKey }, zaxis: { title: zKey } },
+          }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      );
+    }
+
+    if (chartType === 'mesh3d' && xKey && yKey && zKey) {
+      return (
+        <Plot
+          data={[{
+            type: 'mesh3d',
+            x: dataRows.map(row => row[xKey]),
+            y: dataRows.map(row => row[yKey]),
+            z: dataRows.map(row => row[zKey]),
+            opacity: 0.5,
+            color: 'rgb(0,100,200)'
+          }]}
+          layout={{
+            title: '3D Mesh Plot',
+            scene: { xaxis: { title: xKey }, yaxis: { title: yKey }, zaxis: { title: zKey } },
+          }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      );
+    }
+
+    if (chartType === 'bubble3d' && xKey && yKey && zKey) {
+      return (
+        <Plot
+          data={[{
+            type: 'scatter3d',
+            mode: 'markers',
+            x: dataRows.map(row => row[xKey]),
+            y: dataRows.map(row => row[yKey]),
+            z: dataRows.map(row => row[zKey]),
+            marker: {
+              size: dataRows.map(row => Math.abs(Number(row[zKey])) || 1),
+              color: dataRows.map(row => Number(row[zKey])),
+              colorscale: 'Viridis',
+              opacity: 0.8
+            }
+          }]}
+          layout={{
+            title: '3D Bubble Chart',
+            scene: { xaxis: { title: xKey }, yaxis: { title: yKey }, zaxis: { title: zKey } },
+          }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      );
+    }
+    
+    
+    
 
     switch (chartType) {
       case 'bar': return <Bar data={data} options={options} />;
@@ -192,26 +272,46 @@ const ExcelGraphUploader = () => {
   };
 
   const downloadChart = () => {
+    const plotlyElement = document.querySelector('.js-plotly-plot');
+
+  if (plotlyElement) {
+    window.Plotly.toImage(plotlyElement, { format: 'png', width: 800, height: 600 })
+      .then((dataUrl) => {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `chart-${chartType}-${Date.now()}.png`;
+        link.click();
+      })
+      .catch(err => console.error("Plotly image download failed:", err));
+  } else {
+    // Fallback for Chart.js
     const chartCanvas = document.querySelector('canvas');
-    const image = chartCanvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = image;
-    link.download = `chart-${chartType}-${Date.now()}.png`;
-    link.click();
+    if (chartCanvas) {
+      const image = chartCanvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `chart-${chartType}-${Date.now()}.png`;
+      link.click();
+    }
+  }
   };
 
   const downloadPDF = () => {
-    const chartCanvas = document.querySelector('canvas');
-    html2canvas(chartCanvas).then(canvas => {
+    const plotlyElement = document.querySelector('.js-plotly-plot') || document.querySelector('canvas');
+
+    if (!plotlyElement) return;
+  
+    html2canvas(plotlyElement).then(canvas => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF();
-      pdf.addImage(imgData, 'PNG', 10, 10, 180, 100);
-      pdf.save('chart.pdf');
-    });
+      const width = pdf.internal.pageSize.getWidth();
+      const height = pdf.internal.pageSize.getHeight();
+      pdf.addImage(imgData, 'PNG', 10, 10, width - 20, height / 2);
+      pdf.save(`chart-${chartType}-${Date.now()}.pdf`);
+    }).catch(err => console.error("PDF generation failed", err));
   };
 
   useEffect(() => {
-    console.log(wave);
     const fetchUpload = async () => {
       if (!id) return;
       try {
@@ -225,14 +325,13 @@ const ExcelGraphUploader = () => {
         setColumns(Object.keys(jsonData[0]));
         setXKey('');
         setYKey('');
+        setZKey('');
       } catch (err) {
         console.error("Failed to fetch upload by ID", err);
       }
-    }
+    };
     fetchUpload();
-  }, [])
-
-
+  }, []);
 
   return (
     <div style={{
@@ -261,7 +360,8 @@ const ExcelGraphUploader = () => {
 
         {columns.length > 0 && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className={`grid grid-cols-1 ${['bar3d', 'scatter3d', 'line3d', 'surface3d', 'mesh3d', 'bubble3d'].includes(chartType) ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-4`}>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">X Axis</label>
                 <select
@@ -272,6 +372,7 @@ const ExcelGraphUploader = () => {
                   {columns.map(col => <option key={col} value={col}>{col}</option>)}
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Y Axis</label>
                 <select
@@ -282,6 +383,20 @@ const ExcelGraphUploader = () => {
                   {columns.map(col => <option key={col} value={col}>{col}</option>)}
                 </select>
               </div>
+
+              {['bar3d', 'scatter3d', 'line3d', 'surface3d', 'mesh3d', 'bubble3d'].includes(chartType) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Z Axis</label>
+                  <select
+                    onChange={e => setZKey(e.target.value)}
+                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
+                  >
+                    <option value="">Select</option>
+                    {columns.map(col => <option key={col} value={col}>{col}</option>)}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Chart Type</label>
                 <select
@@ -294,8 +409,7 @@ const ExcelGraphUploader = () => {
               </div>
             </div>
 
-
-            {(xKey && yKey) && (
+            {(xKey && yKey && (chartType === 'bar3d' || chartType === 'scatter3d' ? zKey : true)) && (
               <div className="mt-6">
                 <div className="bg-white p-4 rounded-lg shadow">
                   {renderChart()}
@@ -326,7 +440,6 @@ const ExcelGraphUploader = () => {
                 <p className="text-xs text-gray-500 mt-2 px-2">Showing first 20 rows.</p>
               </div>
             )}
-
 
             <div className="flex justify-center mt-7">
               <button

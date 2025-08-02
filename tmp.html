@@ -2,121 +2,156 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ECharts 3D Chart Switcher</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
+  <title>Chart Selector with Icons</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
       background: #f5f5f5;
+      font-family: 'Roboto', sans-serif;
+      color: #202124;
+      padding: 40px;
+      max-width: 800px;
+      margin: auto;
     }
-    #controls {
-      padding: 10px;
+
+    h3, h4 {
+      margin-bottom: 10px;
+      color: #202124;
+      font-weight: 500;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .option-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .option {
+      flex: 1 1 150px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
       background: #ffffff;
+      color: #202124;
+      cursor: pointer;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
       text-align: center;
     }
-    #chart {
-      width: 100%;
-      height: 90vh;
+
+    .option .material-icons {
+      font-size: 36px;
+      margin-bottom: 8px;
+      color: #5f6368;
+    }
+
+    .option:hover {
+      background: #f1f3f4;
+    }
+
+    .option.selected {
+      background: #e8f0fe;
+      border-color: #4285f4;
+      color: #174ea6;
+      font-weight: 500;
+    }
+
+    .option.selected .material-icons {
+      color: #174ea6;
+    }
+
+    .chart-options {
+      display: none;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
 
-<div id="controls">
-  <label for="chartType">Select 3D Chart Type: </label>
-  <select id="chartType">
-    <option value="bar3D">3D Bar</option>
-    <option value="scatter3D">3D Scatter</option>
-    <option value="surface3D">3D Surface</option>
-  </select>
-</div>
+  <div class="section">
+    <h3>Select Chart Dimension</h3>
+    <div class="option-group" id="chartTypeGroup">
+      <div class="option" data-value="2d" onclick="selectOption(this, 'chartType')">
+        <span class="material-icons">view_agenda</span>
+        2D Chart
+      </div>
+      <div class="option" data-value="3d" onclick="selectOption(this, 'chartType')">
+        <span class="material-icons">view_in_ar</span>
+        3D Chart
+      </div>
+    </div>
+  </div>
 
-<div id="chart"></div>
+  <div id="2d-options" class="chart-options section">
+    <h4>Select a 2D Chart</h4>
+    <div class="option-group" id="chart2dGroup">
+      <div class="option" data-value="line" onclick="selectOption(this, 'chartOption')">
+        <span class="material-icons">show_chart</span>
+        Line Chart
+      </div>
+      <div class="option" data-value="bar" onclick="selectOption(this, 'chartOption')">
+        <span class="material-icons">bar_chart</span>
+        Bar Chart
+      </div>
+      <div class="option" data-value="pie" onclick="selectOption(this, 'chartOption')">
+        <span class="material-icons">pie_chart</span>
+        Pie Chart
+      </div>
+    </div>
+  </div>
 
-<script>
-  const chart = echarts.init(document.getElementById('chart'));
+  <div id="3d-options" class="chart-options section">
+    <h4>Select a 3D Chart</h4>
+    <div class="option-group" id="chart3dGroup">
+      <div class="option" data-value="column3d" onclick="selectOption(this, 'chartOption')">
+        <span class="material-icons">view_column</span>
+        3D Column
+      </div>
+      <div class="option" data-value="pie3d" onclick="selectOption(this, 'chartOption')">
+        <span class="material-icons">donut_large</span>
+        3D Pie
+      </div>
+      <div class="option" data-value="surface3d" onclick="selectOption(this, 'chartOption')">
+        <span class="material-icons">terrain</span>
+        3D Surface
+      </div>
+    </div>
+  </div>
 
-  // Common axes and grid settings
-  const baseOption = {
-    tooltip: {},
-    xAxis3D: { type: 'value' },
-    yAxis3D: { type: 'value' },
-    zAxis3D: { type: 'value' },
-    grid3D: {
-      boxWidth: 120,
-      boxDepth: 120,
-      viewControl: { autoRotate: true }
-    },
-    visualMap: {
-      show: true,
-      max: 20,
-      inRange: {
-        color: ['#313695', '#74add1', '#abd9e9', '#ffffbf', '#fdae61', '#a50026']
+  <script>
+    const state = {
+      chartType: null,
+      chartOption: null
+    };
+
+    function selectOption(element, type) {
+      const group = element.parentElement;
+      group.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+
+      const value = element.dataset.value || element.textContent.trim();
+      state[type] = value;
+
+      if (type === 'chartType') {
+        document.getElementById('2d-options').style.display = value === '2d' ? 'block' : 'none';
+        document.getElementById('3d-options').style.display = value === '3d' ? 'block' : 'none';
+
+        // Reset chartOption selection
+        document.querySelectorAll('#chart2dGroup .option, #chart3dGroup .option').forEach(el => el.classList.remove('selected'));
+        state.chartOption = null;
       }
+
+      console.log("Selected State:", state);
     }
-  };
-
-  // Data generators
-  function getBarScatterData() {
-    const data = [];
-    for (let x = 0; x <= 10; x++) {
-      for (let y = 0; y <= 10; y++) {
-        const z = Math.round(Math.random() * 20);
-        data.push([x, y, z]);
-      }
-    }
-    return data;
-  }
-
-  function getSurfaceData() {
-    const data = [];
-    for (let x = 0; x <= 30; x++) {
-      for (let y = 0; y <= 30; y++) {
-        const z = Math.sin(x / 5) * Math.cos(y / 5) * 10;
-        data.push([x, y, z]);
-      }
-    }
-    return data;
-  }
-
-  function renderChart(type) {
-    let seriesData;
-    if (type === 'bar3D') {
-      seriesData = [{
-        type: 'bar3D',
-        shading: 'lambert',
-        data: getBarScatterData().map(item => ({ value: item })),
-        label: { show: false }
-      }];
-    } else if (type === 'scatter3D') {
-      seriesData = [{
-        type: 'scatter3D',
-        data: getBarScatterData(),
-        symbolSize: 12,
-        itemStyle: { color: '#ff6600' }
-      }];
-    } else if (type === 'surface3D') {
-      seriesData = [{
-        type: 'surface',
-        data: getSurfaceData(),
-        shading: 'realistic',
-        wireframe: { show: false }
-      }];
-    }
-
-    chart.setOption({ ...baseOption, series: seriesData }, true);
-  }
-
-  // Initial render
-  renderChart('bar3D');
-
-  // Dropdown event
-  document.getElementById('chartType').addEventListener('change', function () {
-    renderChart(this.value);
-  });
-</script>
+  </script>
 
 </body>
 </html>

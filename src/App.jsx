@@ -8,6 +8,7 @@ import AdminDashboard from './dashboard/AdminDashboard';
 import ThreedGraph from './pages/ThreedGraph';
 import Layout from './layouts/Layout';
 import About from './pages/About';
+import LandingPage from './pages/LandingPage';
 
 function App() {
 
@@ -16,7 +17,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<Layout/>}>
-          <Route index element={<Login />} />
+          <Route index element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />

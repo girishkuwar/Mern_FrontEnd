@@ -2,8 +2,8 @@ import React from 'react';
 
 const chartTypes = {
   '2d': [
-    { type: 'line', label: 'Line Chart', icon: 'show_chart' },
     { type: 'bar', label: 'Bar Chart', icon: 'bar_chart' },
+    { type: 'line', label: 'Line Chart', icon: 'show_chart' },
     { type: 'pie', label: 'Pie Chart', icon: 'pie_chart' },
     { type: 'doughnut', label: 'Doughnut', icon: 'donut_small' },
     { type: 'scatter', label: 'Scatter', icon: 'scatter_plot' }

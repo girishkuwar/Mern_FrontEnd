@@ -5,7 +5,6 @@ const UserList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch users from API
   const fetchUsers = async () => {
     try {
       const res = await axios.get('http://localhost:5000/api/admin/users', {
@@ -14,6 +13,7 @@ const UserList = () => {
         }
       });
       setUsers(res.data || []);
+      console.log(res.data);
     } catch (err) {
       console.error('Failed to fetch users:', err);
     } finally {
@@ -33,6 +33,30 @@ const UserList = () => {
       setUsers(prev => prev.filter(user => user._id !== userId));
     } catch (err) {
       console.error("Failed to delete user:", err);
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/admin/users/${userId}/role`,
+        { role: newRole },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      // Update UI immediately
+      setUsers(prev =>
+        prev.map(user =>
+          user._id === userId ? { ...user, role: newRole } : user
+        )
+      );
+    } catch (err) {
+      console.error("Failed to update user role:", err);
+      alert("Error updating user role.");
     }
   };
 
@@ -57,15 +81,26 @@ const UserList = () => {
                 <th className="px-4 py-2">Name</th>
                 <th className="px-4 py-2">Email</th>
                 <th className="px-4 py-2">Uploaded Files</th>
+                <th className="px-4 py-2">Role</th>
                 <th className="px-4 py-2">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {users.map(user => (
                 <tr key={user._id}>
-                  <td className="px-4 py-2">{user.name}</td>
+                  <td className="px-4 py-2">{user.username}</td>
                   <td className="px-4 py-2">{user.email}</td>
                   <td className="px-4 py-2">{user.uploadCount || 0}</td>
+                  <td className="px-4 py-2">
+                    <select
+                      value={user.role || 'user'}
+                      onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                      className="border rounded px-2 py-1 text-sm"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
                   <td className="px-4 py-2">
                     <button
                       onClick={() => handleDelete(user._id)}

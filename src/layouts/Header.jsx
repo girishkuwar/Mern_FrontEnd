@@ -66,7 +66,7 @@ const Header = () => {
                   </div>
                 </div>
               ) : (
-                <button onClick={() => nav("/")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition">Login</button>
+                <button onClick={() => nav("/login")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition">Login</button>
               )}
             </div>
 

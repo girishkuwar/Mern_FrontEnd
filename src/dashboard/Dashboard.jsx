@@ -42,12 +42,12 @@ const Dashboard = () => {
     }} className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-4xl mx-auto mt-10">
         <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-        <button
+        {/* <button
           onClick={() => (nav('/exel'))}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800 transition"
         >
           Add New Chart
-        </button>
+        </button> */}
         <div className="bg-white shadow rounded-lg p-4">
           <h2 className="text-xl font-semibold text-gray-800 mb-3">Upload History</h2>
           {

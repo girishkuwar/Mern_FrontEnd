@@ -92,22 +92,30 @@ const UserList = () => {
                   <td className="px-4 py-2">{user.email}</td>
                   <td className="px-4 py-2">{user.uploadCount || 0}</td>
                   <td className="px-4 py-2">
-                    <select
-                      value={user.role || 'user'}
-                      onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                      className="border rounded px-2 py-1 text-sm"
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                    {user.role === 'admin' && user.canCreateAdmin ? (
+                      <span className="text-indigo-600 font-medium">Super Admin</span>
+                    ) : (
+                      <select
+                        value={user.role || 'user'}
+                        onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                        className="border rounded px-2 py-1 text-sm"
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    )}
                   </td>
                   <td className="px-4 py-2">
-                    <button
-                      onClick={() => handleDelete(user._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-xs"
-                    >
-                      Remove
-                    </button>
+                    {user.role === 'admin' && user.canCreateAdmin ? (
+                      <span className="text-gray-400 text-xs">Protected</span>
+                    ) : (
+                      <button
+                        onClick={() => handleDelete(user._id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-xs"
+                      >
+                        Remove
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
